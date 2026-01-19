@@ -81,7 +81,7 @@ pub struct Manager {
     remote: Url,
     temporary: TempDir,
     method: Method,
-    template: Configuration,
+    template: Option<Configuration>,
     globals: HashMap<String, String>,
 }
 
@@ -91,7 +91,7 @@ impl Manager {
             remote,
             temporary,
             method,
-            template: Default::default(),
+            template: None,
             globals: HashMap::default(),
         }
     }
@@ -109,7 +109,7 @@ impl Manager {
     }
 
     pub fn parse(self) -> Result<Self> {
-        let template = Configuration::surely_template(self.temporary.path().to_path_buf(), 1)?;
+        let template = Some(Configuration::surely_template(self.temporary.path().to_path_buf(), 1)?);
 
         Ok(Self {
             template,
@@ -120,12 +120,8 @@ impl Manager {
         })
     }
 
-    pub fn evaluate(mut self) -> Result<Self> {
-        self.template
-            .clone()
-            .template()?
-            .computable()
-            .compute(&mut self.globals)?;
+    pub fn evaluate(self) -> Result<Self> {
+        self.configuration()?.clone().template()?;
 
         Ok(self)
     }
@@ -135,13 +131,17 @@ impl Manager {
             fs::create_dir_all(&destination)?
         }
 
-        CopyBuilder::new(self.template.clone().template()?.path(), destination)
+        CopyBuilder::new(self.configuration()?.clone().template()?.path(), destination)
             .overwrite(true)
             .overwrite_if_newer(true)
             .overwrite_if_size_differs(true)
             .run()?;
 
         Ok(self)
+    }
+
+    fn configuration(&self) -> Result<&Configuration> {
+        self.template.as_ref().ok_or(Error::NoTemplateConfiguration)
     }
 }
 
