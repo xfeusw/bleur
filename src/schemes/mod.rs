@@ -4,6 +4,7 @@ pub mod template;
 use crate::schemes::{collections::Collections, template::Template};
 use crate::{Error, Result};
 use std::fs;
+use std::ops::Not;
 use std::path::PathBuf;
 
 static MAX_COLLECTIONS_DEPTH: u8 = 5;
