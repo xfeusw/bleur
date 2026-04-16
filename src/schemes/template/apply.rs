@@ -4,22 +4,19 @@ enum Instructions {
 
     /// Make whole value lowercase
     Lowercase,
-
-    /// If the function name is not recognized
-    Unknown,
 }
 
-impl<T: ToString> From<T> for Instructions {
-    fn from(value: T) -> Self {
-        match value.to_string().to_lowercase().as_str() {
-            "uppercase" => Self::Uppercase,
-            "lowercase" => Self::Lowercase,
-            _ => Self::Unknown,
+impl Instructions {
+    fn from(value: impl AsRef<str>) -> Option<Self> {
+        match value.as_ref().trim().to_ascii_lowercase().as_str() {
+            "uppercase" => Some(Self::Uppercase),
+            "lowercase" => Some(Self::Lowercase),
+            _ => None,
         }
     }
 }
 
-pub struct Apply(Vec<Instructions>);
+pub struct Apply(Vec<Option<Instructions>>);
 
 impl Apply {
     pub fn parse<T: ToString>(input: T) -> Apply {
@@ -28,7 +25,7 @@ impl Apply {
                 .to_string()
                 .split(",")
                 .map(Instructions::from)
-                .collect::<Vec<Instructions>>(),
+                .collect::<Vec<Option<Instructions>>>(),
         )
     }
 
@@ -36,9 +33,9 @@ impl Apply {
         self.0.iter().fold(
             input.to_string(),
             |current, instruction| match instruction {
-                Instructions::Uppercase => current.to_uppercase(),
-                Instructions::Lowercase => current.to_lowercase(),
-                Instructions::Unknown => current,
+                Some(Instructions::Uppercase) => current.to_uppercase(),
+                Some(Instructions::Lowercase) => current.to_lowercase(),
+                _ => current,
             },
         )
     }
