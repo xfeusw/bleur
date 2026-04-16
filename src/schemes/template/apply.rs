@@ -12,10 +12,7 @@ enum Instructions {
     Unknown,
 }
 
-impl<T> From<T> for Instructions
-where
-    T: ToString,
-{
+impl<T: AsRef<str>> From<T> for Instructions {
     fn from(value: T) -> Self {
         match value.as_ref() {
             s if s.eq_ignore_ascii_case("uppercase") => Self::Uppercase,
